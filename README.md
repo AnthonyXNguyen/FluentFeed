@@ -31,7 +31,34 @@ Project Status:
 FluentFeed is currently in active development. The current MVP supports English and Spanish, and offers Vietnamese tone-matching logic. Potential to expand to other tonal languages like Chinese, Japanese, Korean. 
 
 # Download Dependencies
+npm install
 
+## Dependencies
+- expo `~54.0.36` — core Expo SDK/runtime
+- expo-router `~6.0.24` — file-based navigation
+- expo-av `~16.0.8` — audio/video playback (pronunciation audio)
+- expo-constants `~18.0.13` — access to app/device config at runtime
+- expo-font `~14.0.12` — custom font loading
+- expo-linking `~8.0.11` — deep linking
+- expo-splash-screen `~31.0.13` — splash screen control
+- expo-status-bar `~3.0.9` — status bar styling
+- expo-web-browser `~15.0.10` — in-app browser (OAuth/external links)
+- react `19.1.0` — UI library
+- react-dom `19.1.0` — React renderer for the web build
+- react-native `0.81.5` — native app framework
+- react-native-reanimated `~4.1.1` — animations for haptic/UI feedback
+- react-native-worklets `0.5.1` — worklet runtime backing Reanimated
+- react-native-safe-area-context `~5.6.0` — safe-area insets
+- react-native-screens `~4.16.0` — native screen primitives for navigation
+- react-native-web `~0.21.0` — web support for React Native components
+- @expo/vector-icons `^15.0.3` — icon sets (FontAwesome6, etc.)
+- @react-navigation/native `^7.1.8` — navigation core (used by expo-router)
+- @shopify/flash-list `2.0.2` — high-performance list powering the Reels-style feed
+
+### Dev Dependencies
+- typescript `~5.9.2`
+- @types/react `~19.1.0`
+- react-test-renderer `19.1.0`
 
 # How to Run
 npx expo start
