@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -49,14 +50,25 @@ const PAGE_DURATION_MS = 280;
 // arrow-key driven, animated with Reanimated instead of relying on native
 // browser scrolling. See FeedScreen, which renders this only when
 // `Platform.OS === "web"` and falls back to a plain FlashList elsewhere.
-export const DesktopCardPager = ({ data }: { data: VocabularyItem[] }) => {
+export const DesktopCardPager = ({
+  data,
+  setId,
+}: {
+  data: VocabularyItem[];
+  setId: string;
+}) => {
   const { height: screenHeight } = useWindowDimensions();
+  const router = useRouter();
   const translateY = useSharedValue(0);
   const indexRef = useRef(0);
   const isAnimating = useRef(false);
   const wheelPhase = useRef<"idle" | "pending" | "settling">("idle");
   const wheelDelta = useRef(0);
   const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The furthest index the user has unlocked by clearing (correctly
+  // pronouncing, or skipping) every card before it. Forward paging can't
+  // pass this; backward paging (reviewing earlier cards) always can.
+  const unlockedIndexRef = useRef(0);
 
   const setAnimatingFalse = () => {
     isAnimating.current = false;
@@ -85,7 +97,21 @@ export const DesktopCardPager = ({ data }: { data: VocabularyItem[] }) => {
     if (isAnimating.current) return;
     const nextIndex = indexRef.current + direction;
     if (nextIndex < 0 || nextIndex > data.length - 1) return;
+    if (direction === 1 && nextIndex > unlockedIndexRef.current) return;
     goToIndex(nextIndex);
+  };
+
+  // Called when the card at `index` is cleared (correct pronunciation, or
+  // skipped). Advances to the next card, or - on the last card - hands off
+  // to the set-complete screen.
+  const handleCardCleared = (index: number) => {
+    if (index >= data.length - 1) {
+      router.replace(`/feed/${setId}/complete`);
+      return;
+    }
+    const next = index + 1;
+    unlockedIndexRef.current = Math.max(unlockedIndexRef.current, next);
+    goToIndex(next);
   };
 
   const armWheelTimer = (ms: number, onFire: () => void) => {
@@ -149,9 +175,9 @@ export const DesktopCardPager = ({ data }: { data: VocabularyItem[] }) => {
       {...({ onWheel: handleWheel } as any)}
     >
       <Animated.View style={stackStyle}>
-        {data.map((item) => (
+        {data.map((item, index) => (
           <View key={item.id} style={{ height: screenHeight }}>
-            <VocabularyCard item={item} />
+            <VocabularyCard item={item} onCleared={() => handleCardCleared(index)} />
           </View>
         ))}
       </Animated.View>

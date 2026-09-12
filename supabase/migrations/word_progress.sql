@@ -2,7 +2,7 @@
 create table word_progress (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  item_id uuid not null references vocabulary_items(id) on delete cascade,
+  item_id uuid not null references vocab_words(id) on delete cascade,
   mastery_score int not null default 0,
   attempt_count int not null default 0,
   last_reviewed_at timestamptz,

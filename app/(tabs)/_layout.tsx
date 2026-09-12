@@ -1,13 +1,14 @@
 import React from 'react';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { Tabs } from 'expo-router';
+import type { ColorValue } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: { name: string; color: string }) {
+function TabBarIcon(props: { name: string; color: ColorValue }) {
   return <FontAwesome6 size={28} style={{ marginBottom: -3 }} solid {...props} />;
 }
 
