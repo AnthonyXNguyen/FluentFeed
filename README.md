@@ -4,8 +4,6 @@ A language-learning app built like a short-form video feed, where you can't scro
 - **Shorts Mode** *(in progress)*: scroll real Shorts in the language you're learning, then pass a quick quiz to unlock the next one. You might repeat a line from the video, pick what happened, or translate a phrase into your own language.
 - **Flashcard Mode**: build your own vocab sets and pronounce each card to advance. AI grades every word you say.
 
-Most language apps let you passively tap through. FluentFeed doesn't: **to get to the next card, you have to speak.**
-
 ## How grading works
 - **AI scoring:** Azure Speech scores your accuracy, fluency, and prosody (pitch/intonation) down to the phoneme.
 - **Tonal languages:** prosody scoring helps with tone-heavy languages like Vietnamese.
