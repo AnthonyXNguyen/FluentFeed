@@ -1,12 +1,13 @@
 # FluentFeed
-An "addictive" language-learning app that turns pronunciation practice into a Reels-style infinite scroll, with AI grading every word you say.
+A language-learning app built like a short-form video feed, where you can't scroll until you speak.
 
-Most language apps are passive; FluentFeed is active. **To get to the next card, you have to speak.**
+- **Shorts Mode** *(in progress)*: scroll real Shorts in the language you're learning, then pass a quick quiz to unlock the next one. You might repeat a line from the video, pick what happened, or translate a phrase into your own language.
+- **Flashcard Mode**: build your own vocab sets and pronounce each card to advance. AI grades every word you say.
 
-## How it works
-- **The feed:** swipe through vocab cards in a vertical, Reels-style feed.
-- **Speak to advance:** each card shows a word or phrase you have to pronounce correctly to move on.
-- **AI grading:** Azure Speech scores your accuracy, fluency, and prosody (pitch/intonation) down to the phoneme.
+Most language apps let you passively tap through. FluentFeed doesn't: **to get to the next card, you have to speak.**
+
+## How grading works
+- **AI scoring:** Azure Speech scores your accuracy, fluency, and prosody (pitch/intonation) down to the phoneme.
 - **Tonal languages:** prosody scoring helps with tone-heavy languages like Vietnamese.
 
 ## Tech stack
@@ -21,7 +22,7 @@ Full dependency list: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md)
 In active development. The MVP supports English and Spanish, with Vietnamese tone-matching.
 
 Planned:
-- **Shorts Mode (flagship):** scroll real short-form videos in your target language, pick a category or channel, and answer a quick quiz after each one: say a phrase from the video, pick what happened, or translate a line into your native language. Vocab cards stay available as their own mode, or mix both. Plan: [docs/SHORTS_FEATURE.md](docs/SHORTS_FEATURE.md)
+- **Shorts Mode (flagship):** Creative Commons Shorts with post-video quizzes, filtered by category or channel, plus a mixed feed with flashcards. Plan: [docs/SHORTS_FEATURE.md](docs/SHORTS_FEATURE.md)
 - Native audio so you can hear each word before saying it
 - Active Recall mode: see an English prompt, speak the translation from memory (OpenAI Whisper)
 - Spaced repetition that brings missed words back into the feed
