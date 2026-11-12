@@ -1,4 +1,4 @@
-# Automatic Playwright (+ bundled Chromium) updates.
+# Automatic Playwright (+ bundled Chromium, Firefox, and Webkit) updates.
 # Once a month, Dependabot opens a PR bumping @playwright/test to the newest
 # version that has been out for at least 14 days. CI then runs every test
 # against the new Chromium on that PR - merge it when the checks are green.

@@ -59,7 +59,7 @@ const ConfettiPiece = ({ p, progress }: { p: Particle; progress: SharedValue<num
 // A one-shot burst from the centre of its parent. Drive `progress` 0 -> 1
 // to play it; leave it at 0 to keep it hidden.
 export const ConfettiBurst = ({ progress }: { progress: SharedValue<number> }) => (
-  <View pointerEvents="none" style={styles.container}>
+  <View style={styles.container}>
     {PARTICLES.map((p, i) => (
       <ConfettiPiece key={i} p={p} progress={progress} />
     ))}
@@ -69,6 +69,7 @@ export const ConfettiBurst = ({ progress }: { progress: SharedValue<number> }) =
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFill,
+    pointerEvents: "none",
   },
   piece: {
     position: "absolute",

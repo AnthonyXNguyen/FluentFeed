@@ -15,17 +15,11 @@ const ICON_SIZE = 72;
 // badge (plus confetti for correct). Driven entirely by useAnswerFeedback.
 export const FeedbackOverlay = ({ feedback }: { feedback: AnswerFeedback }) => (
   <>
-    <Animated.View
-      pointerEvents="none"
-      style={[styles.flash, { backgroundColor: GREEN }, feedback.styles.correctFlash]}
-    />
+    <Animated.View style={[styles.flash, { backgroundColor: GREEN }, feedback.styles.correctFlash]} />
     <ConfettiBurst progress={feedback.confetti} />
     <Badge icon="check" color={GREEN} style={feedback.styles.check} />
 
-    <Animated.View
-      pointerEvents="none"
-      style={[styles.flash, { backgroundColor: RED }, feedback.styles.incorrectFlash]}
-    />
+    <Animated.View style={[styles.flash, { backgroundColor: RED }, feedback.styles.incorrectFlash]} />
     <Badge icon="xmark" color={RED} style={feedback.styles.cross} />
   </>
 );
@@ -40,7 +34,7 @@ const Badge = ({
   color: string;
   style: AnswerFeedback["styles"]["check"];
 }) => (
-  <Animated.View pointerEvents="none" style={[styles.badgeLayer, style]}>
+  <Animated.View style={[styles.badgeLayer, style]}>
     <View style={styles.disc}>
       <FontAwesome6 name={icon} size={ICON_SIZE} color={color} solid />
     </View>
@@ -50,10 +44,12 @@ const Badge = ({
 const styles = StyleSheet.create({
   flash: {
     ...StyleSheet.absoluteFill,
+    pointerEvents: "none",
     borderRadius: CARD_BORDER_RADIUS,
   },
   badgeLayer: {
     ...StyleSheet.absoluteFill,
+    pointerEvents: "none",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -64,10 +60,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 10,
+    boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.25)",
   },
 });

@@ -28,8 +28,55 @@ export type FakeApi = {
 // Matches the localStorage key supabase-js derives from the URL host.
 const SESSION_KEY = "sb-fakesb-auth-token";
 
-export const test = base.extend<{ api: FakeApi; vocab: typeof SETS }>({
+export const test = base.extend<{
+  api: FakeApi;
+  vocab: typeof SETS;
+  microphone: void;
+  consoleLog: void;
+}>({
   vocab: [SETS, { option: true }],
+
+  // Chromium and Firefox have built-in fake mics (playwright.config.ts).
+  // WebKit doesn't, and CI machines have no audio input, so there we swap
+  // getUserMedia for a generated tone. E2E_FAKE_MIC=1 forces it everywhere.
+  microphone: [
+    async ({ page, browserName }, use) => {
+      if (browserName === "webkit" || process.env.E2E_FAKE_MIC) {
+        await page.addInitScript(() => {
+          const devices = navigator.mediaDevices;
+          if (!devices) return;
+          const real = devices.getUserMedia?.bind(devices);
+          devices.getUserMedia = async (constraints) => {
+            if (!constraints?.audio) return real(constraints);
+            const ctx = new AudioContext();
+            const tone = ctx.createOscillator();
+            const out = ctx.createMediaStreamDestination();
+            tone.connect(out);
+            tone.start();
+            return out.stream;
+          };
+        });
+      }
+      await use();
+    },
+    { auto: true },
+  ],
+
+  // On failure, attach the browser console so the real error (e.g. why the
+  // mic failed to start) shows up in the report, not just the on-screen text.
+  consoleLog: [
+    async ({ page }, use, testInfo) => {
+      const lines: string[] = [];
+      page.on("console", (m) => lines.push(`[${m.type()}] ${m.text()}`));
+      page.on("pageerror", (e) => lines.push(`[pageerror] ${e.message}`));
+      await use();
+      if (testInfo.status !== testInfo.expectedStatus && lines.length) {
+        await testInfo.attach("browser-console.txt", { body: lines.join("\n"), contentType: "text/plain" });
+        console.log(`--- browser console (${testInfo.title}) ---\n${lines.slice(-15).join("\n")}`);
+      }
+    },
+    { auto: true },
+  ],
 
   // Auto: every test gets a signed-in fake session, fake Supabase, a fake
   // scoring API it can control, and a log of feedback sounds played.

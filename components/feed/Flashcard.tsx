@@ -78,11 +78,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fdfaf3",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
-    elevation: 10,
+    boxShadow: "0px 12px 20px rgba(0, 0, 0, 0.35)",
   },
   // Depending on value of flipped (0 or 1), either the front card
   // is considered the back card, or the back card is considered
