@@ -46,3 +46,8 @@ backend/*.csv
 # generated native folders
 /ios
 /android
+
+# Python tooling caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/

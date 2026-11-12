@@ -15,12 +15,15 @@ export default function FeedScreen() {
   const { setId } = useLocalSearchParams<{ setId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [items, setItems] = useState<VocabularyItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Tagged with the setId it was fetched for, so "loading" is derived
+  // (the loaded set isn't the one in the URL yet) instead of being a
+  // separate flag the effect has to reset synchronously.
+  const [loaded, setLoaded] = useState<{ setId: string; items: VocabularyItem[] } | null>(null);
+  const loading = loaded?.setId !== setId;
+  const items = loading ? [] : loaded.items;
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
 
     supabase
       .from("vocab_words")
@@ -29,8 +32,7 @@ export default function FeedScreen() {
       .order("position", { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
-        if (!error && data) setItems(data);
-        setLoading(false);
+        setLoaded({ setId, items: !error && data ? data : [] });
       });
 
     return () => {

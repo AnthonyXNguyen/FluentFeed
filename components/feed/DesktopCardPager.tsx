@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
   Easing,
@@ -151,19 +151,24 @@ export const DesktopCardPager = ({
     });
   };
 
+  // useEffectEvent always sees the latest attemptStep (current data.length
+  // and screenHeight), so the listener is attached once instead of being
+  // re-subscribed whenever those change.
+  const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      attemptStep(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      attemptStep(-1);
+    }
+  });
+
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        attemptStep(1);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        attemptStep(-1);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [data.length, screenHeight]);
+    const listener = (e: KeyboardEvent) => onKeyDown(e);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   const stackStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

@@ -3,7 +3,6 @@
 - [ ] Check that login stuff still works on mobile (verified, kind of)
 
 ## Features
-- [ ] Implement feature of user adding vocab cards
 - [ ] Implement feature of AI voice grading. (Lenient, and Hard Mode). Make Azure Microsoft Account
 - [ ] Publish to App Store
 - [ ] Improve UI on deleting a set. Its the default alert.

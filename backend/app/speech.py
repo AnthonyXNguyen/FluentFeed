@@ -1,10 +1,26 @@
 import json
+import logging
 import subprocess
 
 import azure.cognitiveservices.speech as speechsdk
 
 from app.config import AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
 from app.schemas import PronunciationAssessmentResponse, WordScore
+
+logger = logging.getLogger(__name__)
+
+
+class AudioConversionError(Exception):
+    """The uploaded recording couldn't be decoded (client-side problem)."""
+
+
+class SpeechNotRecognizedError(Exception):
+    """Azure ran fine but heard no usable speech - the user should retry."""
+
+
+class SpeechServiceError(Exception):
+    """Azure itself failed (bad key/region, quota, network) - not the user's fault."""
+
 
 # Azure's pronunciation assessment expects 16kHz, 16-bit, mono PCM audio.
 # Clients record in whatever format their platform gives them (m4a/AAC on
@@ -32,8 +48,23 @@ def _to_pcm16(audio_bytes: bytes) -> bytes:
         check=False,
     )
     if result.returncode != 0:
-        raise RuntimeError(f"Audio conversion failed: {result.stderr.decode(errors='replace')}")
+        logger.warning("ffmpeg failed: %s", result.stderr.decode(errors="replace"))
+        raise AudioConversionError("Audio conversion failed")
     return result.stdout
+
+
+def parse_word_scores(detail: dict) -> list[WordScore]:
+    # With enable_miscue, words the user skipped ("Omission") or added
+    # ("Insertion") come back without an AccuracyScore - they weren't
+    # pronounced against the reference, so they score 0.
+    return [
+        WordScore(
+            word=w["Word"],
+            accuracy_score=w.get("PronunciationAssessment", {}).get("AccuracyScore", 0),
+            error_type=w.get("PronunciationAssessment", {}).get("ErrorType", "None"),
+        )
+        for w in detail["NBest"][0].get("Words", [])
+    ]
 
 
 def assess_pronunciation(
@@ -65,21 +96,26 @@ def assess_pronunciation(
 
     result = recognizer.recognize_once()
 
+    if result.reason == speechsdk.ResultReason.Canceled:
+        details = result.cancellation_details
+        if details.reason == speechsdk.CancellationReason.Error:
+            # e.g. AuthenticationFailure (401) when the key/region is wrong.
+            logger.error(
+                "Azure Speech request failed: code=%s details=%s",
+                details.code,
+                details.error_details,
+            )
+            raise SpeechServiceError(str(details.code))
+        raise SpeechNotRecognizedError(f"Recognition canceled: {details.reason}")
+
     if result.reason != speechsdk.ResultReason.RecognizedSpeech:
-        raise RuntimeError(f"Speech not recognized (reason: {result.reason})")
+        raise SpeechNotRecognizedError(f"Speech not recognized: {result.reason}")
 
     pronunciation_result = speechsdk.PronunciationAssessmentResult(result)
     detail = json.loads(
         result.properties.get(speechsdk.PropertyId.SpeechServiceResponse_JsonResult)
     )
-    words = [
-        WordScore(
-            word=w["Word"],
-            accuracy_score=w["PronunciationAssessment"]["AccuracyScore"],
-            error_type=w["PronunciationAssessment"]["ErrorType"],
-        )
-        for w in detail["NBest"][0]["Words"]
-    ]
+    words = parse_word_scores(detail)
 
     return PronunciationAssessmentResponse(
         recognized_text=result.text,

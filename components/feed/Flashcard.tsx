@@ -5,6 +5,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated"; //third-party library 
 
+import { CARD_BORDER_RADIUS } from "./layout";
 import type { VocabularyItem } from "./types";
 
 // The flip widget itself: two faces (front = target word, back =
@@ -72,7 +73,7 @@ export const Flashcard = ({
 
 const styles = StyleSheet.create({
   flashcard: {
-    borderRadius: 28,
+    borderRadius: CARD_BORDER_RADIUS,
     padding: 24,
     justifyContent: "center",
     alignItems: "center",

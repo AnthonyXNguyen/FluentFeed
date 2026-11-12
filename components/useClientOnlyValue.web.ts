@@ -1,12 +1,16 @@
 import React from 'react';
 
-// `useEffect` is not invoked during server rendering, meaning
-// we can use this to determine if we're on the server or not.
-export function useClientOnlyValue<S, C>(server: S, client: C): S | C {
-  const [value, setValue] = React.useState<S | C>(server);
-  React.useEffect(() => {
-    setValue(client);
-  }, [client]);
+// Nothing to subscribe to - the value never changes after hydration.
+const subscribe = () => () => {};
 
-  return value;
+// During server rendering and hydration React uses the server snapshot,
+// then switches to the client snapshot right after - the same
+// "server value first, client value once mounted" behavior as before,
+// without a setState-in-effect.
+export function useClientOnlyValue<S, C>(server: S, client: C): S | C {
+  return React.useSyncExternalStore<S | C>(
+    subscribe,
+    () => client,
+    () => server
+  );
 }
