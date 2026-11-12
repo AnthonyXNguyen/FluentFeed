@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+# Runners are pinned (not ubuntu-latest) so a GitHub image upgrade can't
+# break CI by surprise - older Playwright versions can't install Chromium
+# on newer Ubuntu releases. Bump deliberately, checking Playwright support.
+
 # Cancel superseded runs on the same branch/PR.
 concurrency:
   group: ci-${{ github.ref }}
@@ -13,7 +17,7 @@ concurrency:
 jobs:
   app:
     name: App (Expo)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # Placeholders so the web bundle can be built; nothing talks to these in CI.
       EXPO_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
@@ -34,9 +38,16 @@ jobs:
         run: npx expo export --platform web
 
   e2e:
-    name: E2E (Playwright)
-    runs-on: ubuntu-latest
+    name: E2E (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # WebKit hasn't had a verified CI run yet, so it reports but doesn't
+    # fail the workflow. Remove this once it's green.
+    continue-on-error: ${{ matrix.browser == 'webkit' }}
+    strategy:
+      fail-fast: false # one browser failing shouldn't cancel the others
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -44,17 +55,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install ${{ matrix.browser }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
       # Starts its own Expo web server with fake Supabase/API hosts
       # (playwright.config.ts), so no secrets are needed.
       - name: Run end-to-end tests
-        run: npm run e2e
+        run: npm run e2e -- --project=${{ matrix.browser }}
       - name: Upload report (screenshots + traces)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: |
             playwright-report/
             test-results/
@@ -62,7 +73,7 @@ jobs:
 
   backend:
     name: Backend (FastAPI)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
