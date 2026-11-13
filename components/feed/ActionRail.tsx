@@ -22,10 +22,7 @@ export const ActionRail = ({
   }));
 
   return (
-    <Animated.View
-      style={[styles.rail, fadeStyle]}
-      pointerEvents={isFlipped ? "none" : "auto"}
-    >
+    <Animated.View style={[styles.rail, fadeStyle, { pointerEvents: isFlipped ? "none" : "auto" }]}>
       <Pressable style={styles.button} hitSlop={10}>
         <FontAwesome6 name="volume-high" size={20} color={ICON_COLOR} solid />
         <Text style={styles.label}>Listen</Text>
