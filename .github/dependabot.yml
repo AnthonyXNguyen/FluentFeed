@@ -16,3 +16,17 @@ updates:
     open-pull-requests-limit: 1
     commit-message:
       prefix: "deps"
+
+  # GitHub Actions used in .github/workflows (actions/checkout@v5, etc.).
+  # Same 14-day wait; all action bumps arrive together in one PR.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"
