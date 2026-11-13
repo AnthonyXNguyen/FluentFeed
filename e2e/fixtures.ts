@@ -62,18 +62,33 @@ export const test = base.extend<{
     { auto: true },
   ],
 
-  // On failure, attach the browser console so the real error (e.g. why the
-  // mic failed to start) shows up in the report, not just the on-screen text.
+  // On failure, surface the browser's warnings/errors (e.g. why the mic
+  // failed to start), not just the on-screen text the assertion saw.
   consoleLog: [
     async ({ page }, use, testInfo) => {
-      const lines: string[] = [];
-      page.on("console", (m) => lines.push(`[${m.type()}] ${m.text()}`));
-      page.on("pageerror", (e) => lines.push(`[pageerror] ${e.message}`));
+      const lines: Promise<string>[] = [];
+      page.on("console", (m) => {
+        // Only warnings/errors - info logs and React's dev "timeStamp"
+        // markers are noise and push the cause out of view.
+        if (m.type() !== "warning" && m.type() !== "error") return;
+        // Error objects otherwise print as "JSHandle@object"; read them.
+        const args = m.args().map((a) =>
+          a
+            .evaluate((v) => (v instanceof Error ? `${v.name}: ${v.message}` : String(v)))
+            .catch(() => "?")
+        );
+        lines.push(Promise.all(args).then((parts) => `[${m.type()}] ${parts.join(" ")}`));
+      });
+      page.on("pageerror", (e) => lines.push(Promise.resolve(`[pageerror] ${e.name}: ${e.message}`)));
       await use();
-      if (testInfo.status !== testInfo.expectedStatus && lines.length) {
-        await testInfo.attach("browser-console.txt", { body: lines.join("\n"), contentType: "text/plain" });
-        console.log(`--- browser console (${testInfo.title}) ---\n${lines.slice(-15).join("\n")}`);
-      }
+
+      if (testInfo.status === testInfo.expectedStatus || !lines.length) return;
+      const log = (await Promise.all(lines)).join("\n");
+      await testInfo.attach("browser-console.txt", { body: log, contentType: "text/plain" });
+      // In CI, raise it as an error so it shows in the PR's annotations
+      // (job logs need a login to read; annotations don't).
+      if (process.env.CI) throw new Error(`Browser console:\n${log.slice(-1500)}`);
+      console.log(`--- browser console (${testInfo.title}) ---\n${log}`);
     },
     { auto: true },
   ],
@@ -117,6 +132,12 @@ export const test = base.extend<{
 
     await page.route("http://fakesb.test/**", (route) => {
       const url = new URL(route.request().url());
+      // Home screen's set list: one set, so tests can open it like a user.
+      if (url.pathname === "/rest/v1/vocab_sets") {
+        return route.fulfill({
+          json: [{ id: "set1", title: "Spanish basics", language: "Spanish", vocab_words: [{ count: 3 }] }],
+        });
+      }
       if (url.pathname === "/rest/v1/vocab_words") {
         const setId = (url.searchParams.get("set_id") ?? "").replace(/^eq\./, "");
         return route.fulfill({ json: vocab[setId] ?? [] });
