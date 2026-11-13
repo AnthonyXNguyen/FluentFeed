@@ -49,8 +49,8 @@ jobs:
       matrix:
         browser: [chromium, firefox, webkit]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v5 # get code
+      - uses: actions/setup-node@v5 # install javscript language
         with:
           node-version: 22
           cache: npm
@@ -63,7 +63,7 @@ jobs:
         run: npm run e2e -- --project=${{ matrix.browser }}
       - name: Upload report (screenshots + traces)
         if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v6 # save files 
         with:
           name: playwright-report-${{ matrix.browser }}
           path: |
