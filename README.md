@@ -49,6 +49,7 @@ EXPO_PUBLIC_API_URL=            # backend URL; use your computer's LAN IP on a p
 ```
 AZURE_SPEECH_KEY=      # Azure Portal > Speech resource > Keys and Endpoint
 AZURE_SPEECH_REGION=   # e.g. eastus
+SUPABASE_URL=          # same as EXPO_PUBLIC_SUPABASE_URL; the backend verifies sign-ins with it
 CORS_ORIGINS=          # optional, comma-separated allowed origins
 YOUTUBE_API_KEY=       # Shorts Mode, backend only; Google Cloud > YouTube Data API v3 > Credentials
 ```
@@ -61,3 +62,8 @@ npx expo start
 # Backend (separate terminal)
 cd backend && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000
 ```
+
+## License
+Copyright (c) 2026 Anthony Nguyen. All rights reserved.
+
+This code is public so it can be read and reviewed. It is not licensed for reuse: no copying, modifying, or distributing it without written permission.

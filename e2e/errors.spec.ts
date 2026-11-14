@@ -19,6 +19,21 @@ const CASES: { name: string; reply: FakeApi["reply"]; message: string }[] = [
     message: "Couldn't read that recording. Try again.",
   },
   {
+    name: "signed out / expired session (401)",
+    reply: { status: 401, json: { detail: { code: "unauthorized", message: "x" } } },
+    message: "Your session expired. Sign in again.",
+  },
+  {
+    name: "rate limited (429)",
+    reply: { status: 429, json: { detail: { code: "rate_limited", message: "x" } } },
+    message: "You're practicing fast! Take a short break.",
+  },
+  {
+    name: "recording too long (413)",
+    reply: { status: 413, json: { detail: { code: "audio_too_long", message: "x" } } },
+    message: "That recording was too long. Try a shorter one.",
+  },
+  {
     name: "unknown 422 body",
     reply: { status: 422, json: { detail: "Speech not recognized (reason: ResultReason.Canceled)" } },
     message: "Couldn't score that attempt.",
@@ -43,7 +58,7 @@ for (const { name, reply, message } of CASES) {
 
     await expect.poll(async () => (await screenState(page))?.label).toBe(message);
     const body = await page.evaluate(() => document.body.innerText);
-    expect(body).not.toMatch(/\b(422|502|503)\b|\{|detail|ResultReason|Bad Gateway/);
+    expect(body).not.toMatch(/\b(401|413|422|429|502|503)\b|\{|detail|ResultReason|Bad Gateway/);
     expect((await screenState(page))?.micDisabled).toBe(false);
   });
 }

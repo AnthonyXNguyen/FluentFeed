@@ -49,12 +49,12 @@ jobs:
       matrix:
         browser: [chromium, firefox, webkit]
     steps:
-      - uses: actions/checkout@v7 # get code
-      - uses: actions/setup-node@v7 # install javscript language
+      - uses: actions/checkout@v7 # git clones the fluentfeed repo at the current state of the PR's latest push
+      - uses: actions/setup-node@v7 # installs node, which runs JavaScript on the runner.
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci # ci = clean install  
       - name: Install ${{ matrix.browser }}
         run: npx playwright install --with-deps ${{ matrix.browser }}
       # Starts its own Expo web server with fake Supabase/API hosts
