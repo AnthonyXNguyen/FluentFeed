@@ -13,6 +13,14 @@ for (const holdMs of [150, 700]) {
   });
 }
 
+test("recordings are sent with the user's login token", async ({ page, api }) => {
+  await openFeed(page);
+  await holdMic(page);
+  await expect.poll(() => api.calls).toBe(1);
+  // The fake session's access token (fixtures.ts); the backend verifies it.
+  expect(api.authHeaders).toEqual(["Bearer fake-access"]);
+});
+
 test("leaving the card while it's scoring causes no navigation or errors", async ({ page, api }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));

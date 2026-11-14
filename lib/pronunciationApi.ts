@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
 
+import { supabase } from './supabase';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 if (!API_URL) {
@@ -23,19 +25,27 @@ export type PronunciationAssessmentResult = {
   words: WordScore[];
 };
 
-// Machine-readable reasons an attempt couldn't be scored. The backend sends
-// the first three as `detail.code`; the rest are worked out client-side.
-export type PronunciationErrorCode =
-  | 'no_speech'
-  | 'audio_unreadable'
-  | 'service_unavailable'
-  | 'network'
-  | 'unknown';
+// Codes the backend sends as `detail.code` (see backend/app/main.py).
+const SERVER_CODES = [
+  'no_speech',
+  'audio_unreadable',
+  'audio_too_long',
+  'service_unavailable',
+  'unauthorized',
+  'rate_limited',
+] as const;
+
+// Machine-readable reasons an attempt couldn't be scored: the server's codes
+// plus ones worked out client-side.
+export type PronunciationErrorCode = (typeof SERVER_CODES)[number] | 'network' | 'unknown';
 
 // Short, user-facing copy for each code - this is what the card displays.
 const ERROR_MESSAGES: Record<PronunciationErrorCode, string> = {
   no_speech: "Didn't catch that. Try again.",
   audio_unreadable: "Couldn't read that recording. Try again.",
+  audio_too_long: 'That recording was too long. Try a shorter one.',
+  unauthorized: 'Your session expired. Sign in again.',
+  rate_limited: "You're practicing fast! Take a short break.",
   service_unavailable: 'Scoring is unavailable right now.',
   network: "Can't reach the scoring server.",
   unknown: "Couldn't score that attempt.",
@@ -51,12 +61,12 @@ export class PronunciationApiError extends Error {
 function errorCodeFrom(status: number, body: string): PronunciationErrorCode {
   try {
     const code = JSON.parse(body)?.detail?.code;
-    if (code === 'no_speech' || code === 'audio_unreadable' || code === 'service_unavailable') {
-      return code;
-    }
+    if (SERVER_CODES.includes(code)) return code;
   } catch {
     // Non-JSON body (proxy error page, etc.) - fall through to status.
   }
+  if (status === 401) return 'unauthorized';
+  if (status === 429) return 'rate_limited';
   return status >= 500 ? 'service_unavailable' : 'unknown';
 }
 
@@ -84,10 +94,17 @@ export async function assessPronunciation(
     } as unknown as Blob);
   }
 
+  // The backend only scores audio for signed-in users. getSession() also
+  // refreshes the token first if it has expired.
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new PronunciationApiError('unauthorized');
+
   let response: Response;
   try {
     response = await fetch(`${API_URL}/pronunciation-assessment`, {
       method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
   } catch (err) {

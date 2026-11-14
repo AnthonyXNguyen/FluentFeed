@@ -23,6 +23,8 @@ export type FakeApi = {
   latencyMs: number;
   /** Number of pronunciation requests received. */
   calls: number;
+  /** Authorization header of each request (the backend requires a login). */
+  authHeaders: (string | undefined)[];
 };
 
 // Matches the localStorage key supabase-js derives from the URL host.
@@ -69,7 +71,7 @@ export const test = base.extend<{
   // Auto: every test gets a signed-in fake session, fake Supabase, a fake
   // scoring API it can control, and a log of feedback sounds played.
   api: [async ({ page, vocab }, use) => {
-    const api: FakeApi = { reply: { score: 50 }, latencyMs: 100, calls: 0 };
+    const api: FakeApi = { reply: { score: 50 }, latencyMs: 100, calls: 0, authHeaders: [] };
 
     await page.addInitScript((key) => {
       const now = Math.floor(Date.now() / 1000);
@@ -120,6 +122,7 @@ export const test = base.extend<{
 
     await page.route("http://fakeapi.test/**", async (route: Route) => {
       api.calls++;
+      api.authHeaders.push(await route.request().headerValue("authorization") ?? undefined);
       await new Promise((r) => setTimeout(r, api.latencyMs));
       const reply = api.reply;
       if ("networkError" in reply) return route.abort("connectionrefused");
